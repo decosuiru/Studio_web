@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudioPro Admin</title>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="alert-box" class="alert hidden"></div>
+
+    <div id="login-view" class="view active">
+        <div class="login-card">
+            <h2 class="login-title">Welcome Back</h2>
+            <p class="login-subtitle">Sign in to Studio Dashboard</p>
+            <form id="login-form">
+                <input type="email" id="email" placeholder="Email" required value="">
+                <input type="password" id="password" placeholder="Password" required value="">
+                <button type="submit" class="btn-login">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-view" class="view hidden">
+        <aside class="sidebar">
+            <h2 class="brand">StudioPro</h2>
+            <nav>
+                <button class="nav-btn" onclick="showSection('calendar')">📅 Calendar</button>
+                <button class="nav-btn" onclick="showSection('bookings')">📋 List View</button>
+                <button class="nav-btn admin-only" onclick="showSection('finance')">💰 Finance</button>
+                <!-- [NEW] Accounts Link -->
+                <button class="nav-btn admin-only" onclick="showSection('accounts')">👥 Accounts</button>
+            </nav>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </aside>
+
+        <main class="content">
+            <header>
+                <h2 id="section-title">Calendar</h2>
+                <div class="header-right">
+                    <button class="primary-btn" onclick="openBookingModal()">+ New Booking</button>
+                    <div id="user-info"></div>
+                </div>
+            </header>
+
+            <section id="calendar-section" class="section active">
+                <div class="table-container">
+                    <div id="calendar"></div>
+                </div>
+            </section>
+
+            <section id="bookings-section" class="section hidden">
+                <div class="table-container">
+                    <table id="bookings-table">
+                        <thead>
+                            <!-- [NEW] Action is now "Detail" -->
+                            <tr><th>Client</th><th>Date</th><th>Time</th><th>Studio</th><th>Status</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- FINANCE SECTION (Replace the cards-grid) -->
+            <section id="finance-section" class="section hidden">
+                <div class="cards-grid">
+                    <div class="card"><h3>Total Gross Income</h3><p class="amount" id="fin-income">Rp 0</p></div>
+                    <div class="card"><h3>Total DP Received</h3><p class="amount" id="fin-dp">Rp 0</p></div>
+                    <div class="card"><h3>Remaining Unpaid</h3><p class="amount danger-text" id="fin-remain">Rp 0</p></div>
+                </div>
+                <!-- ... rest of table ... -->
+                <h3 style="margin-top: 30px; margin-bottom: 15px;">Transactions</h3>
+                <div class="table-container">
+                    <table id="finance-table">
+                        <thead>
+                            <tr><th>Client</th><th>Date</th><th>Total</th><th>Paid (DP)</th><th>Remaining</th><th>Status</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- [NEW] ACCOUNTS SECTION -->
+            <section id="accounts-section" class="section hidden">
+                <div class="cards-grid" style="grid-template-columns: 1fr 2fr;">
+                    <!-- Add Account Form -->
+                    <div class="card" style="text-align: left;">
+                        <h3 style="margin-bottom: 20px;">+ Add New Account</h3>
+                        <form id="account-form">
+                            <div class="form-group">
+                                <label>Role</label>
+                                <select id="acc_role" required>
+                                    <option value="Admin">Admin</option>
+                                    <option value="Staff">Staff</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="acc_email" placeholder="user@studio.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="password" id="acc_password" placeholder="••••••••" required>
+                            </div>
+                            <button type="submit" class="primary-btn" style="margin-top: 10px;">Create Account</button>
+                        </form>
+                    </div>
+
+                    <!-- Accounts Table -->
+                    <div class="table-container" style="padding: 0;">
+                        <table id="accounts-table">
+                            <thead>
+                                <tr><th>Email</th><th>Role</th><th>Created At</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!--[NEW] BOOKING DETAIL CARD (READ-ONLY) -->
+    <div id="detail-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Booking Details</h3>
+            <div class="detail-grid" style="margin: 20px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
+                <div><span class="detail-label">Client Name:</span> <strong id="det_name"></strong></div>
+                <div><span class="detail-label">Status:</span> <span id="det_status" class="status-pill"></span></div>
+                <div><span class="detail-label">Phone:</span> <span id="det_phone"></span></div>
+                <div><span class="detail-label">Email:</span> <span id="det_email"></span></div>
+                <div><span class="detail-label">Date:</span> <strong id="det_date"></strong></div>
+                <div><span class="detail-label">Time:</span> <strong id="det_time"></strong></div>
+                <div><span class="detail-label">Studio:</span> <strong id="det_studio"></strong></div>
+                <div><span class="detail-label">Total Price:</span> <strong id="det_total"></strong></div>
+                <div><span class="detail-label">DP Paid:</span> <strong id="det_dp"></strong></div>
+                <div><span class="detail-label">Remaining:</span> <strong class="danger-text" id="det_remain"></strong></div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="del-btn" id="delete-btn" onclick="deleteFromModal()">Delete</button>
+                <button type="button" style="background:#ccc" onclick="closeDetailModal()">Close</button>
+                <!-- Edit button opens the edit form -->
+                <button type="button" class="primary-btn" id="btn-edit-from-detail">Edit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- [REPLACED] SIMPLIFIED BOOKING FORM MODAL -->
+    <div id="booking-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 id="modal-title">New Booking</h3>
+            <form id="booking-form">
+                <input type="hidden" id="booking_id">
+                
+                <!-- [NEW] Direct Input Fields -->
+                <div class="form-group">
+                    <label>Client Info</label>
+                    <input type="text" id="client_name" placeholder="Full Name" required>
+                    <input type="text" id="client_phone" placeholder="Phone Number" required>
+                    <input type="email" id="client_email" placeholder="Email Address (Optional)">
+                </div>
+
+                <div class="time-group">
+                    <input type="date" id="date" required>
+                    <input type="time" id="start_time" required>
+                    <span>to</span>
+                    <input type="time" id="end_time" required>
+                </div>
+
+                <select id="studio" required>
+                    <option value="Studio A">Studio A</option>
+                    <option value="Studio B">Studio B</option>
+                    <option value="Recording Room">Recording Room</option>
+                </select>
+
+                <div class="time-group">
+                    <div>
+                        <label>Total Price</label>
+                        <input type="number" id="total_price" oninput="calcRemaining()" required>
+                    </div>
+                    <div>
+                        <label>Paid / DP</label>
+                        <input type="number" id="dp_paid" oninput="calcRemaining()" required>
+                    </div>
+                </div>
+                 <p class="calc-text">Remaining Payment: <strong id="remaining-text">Rp 0</strong></p>
+
+                <div class="modal-actions">
+                    <button type="button" style="background:#ccc" onclick="closeBookingModal()">Cancel</button>
+                    <button type="submit" class="primary-btn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
