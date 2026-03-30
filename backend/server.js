@@ -87,7 +87,7 @@ app.delete('/api/users/:id', authenticate, isAdmin, async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Error deleting account." }); }
 });
 
-// --- PETTY CASH (ALL USERS CAN ACCESS) ---
+// --- PETTY CASH ---
 app.get('/api/petty_cash', authenticate, async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM petty_cash ORDER BY date DESC, created_at DESC');
@@ -103,6 +103,19 @@ app.post('/api/petty_cash', authenticate, async (req, res) => {
         io.emit('finance_changed');
         res.json({ message: "Transaction added" });
     } catch (error) { res.status(500).json({ error: "Error saving transaction." }); }
+});
+
+// [NEW] PUT Route for Editing Petty Cash
+app.put('/api/petty_cash/:id', authenticate, async (req, res) => {
+    try {
+        const { date, description, type, amount } = req.body;
+        if (!date || !description || !type || !amount) return res.status(400).json({ error: "All fields required." });
+        await pool.query(
+            'UPDATE petty_cash SET date=$1, description=$2, type=$3, amount=$4 WHERE id=$5',[date, description, type, amount, req.params.id]
+        );
+        io.emit('finance_changed');
+        res.json({ message: "Transaction updated" });
+    } catch (error) { res.status(500).json({ error: "Error updating transaction." }); }
 });
 
 app.delete('/api/petty_cash/:id', authenticate, async (req, res) => {
@@ -136,7 +149,7 @@ app.post('/api/bookings', authenticate, async (req, res) => {
         const d_paid = parseFloat(dp_paid) || 0;
         const remaining = t_price - d_paid;
         
-        const overlap = await pool.query(`SELECT id FROM bookings WHERE date = $1 AND ($2 < end_time AND $3 > start_time)`, [date, start_time, end_time]);
+        const overlap = await pool.query(`SELECT id FROM bookings WHERE date = $1 AND ($2 < end_time AND $3 > start_time)`,[date, start_time, end_time]);
         if (overlap.rows.length > 0) return res.status(400).json({ error: "Time slot is already booked." });
 
         await pool.query(
