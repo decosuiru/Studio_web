@@ -82,20 +82,20 @@ app.post('/api/users', authenticate, isAdmin, async (req, res) => {
 app.delete('/api/users/:id', authenticate, isAdmin, async (req, res) => {
     try {
         if (req.user.id == req.params.id) return res.status(400).json({ error: "Cannot delete your own account." });
-        await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
+        await pool.query('DELETE FROM users WHERE id = $1',[req.params.id]);
         res.json({ message: "Account deleted." });
     } catch (error) { res.status(500).json({ error: "Error deleting account." }); }
 });
 
-// --- PETTY CASH (NEW) ---
-app.get('/api/petty_cash', authenticate, isAdmin, async (req, res) => {
+// --- PETTY CASH (ALL USERS CAN ACCESS) ---
+app.get('/api/petty_cash', authenticate, async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM petty_cash ORDER BY date DESC, created_at DESC');
         res.json(result.rows);
     } catch (error) { res.status(500).json({ error: "Error fetching petty cash." }); }
 });
 
-app.post('/api/petty_cash', authenticate, isAdmin, async (req, res) => {
+app.post('/api/petty_cash', authenticate, async (req, res) => {
     try {
         const { date, description, type, amount } = req.body;
         if (!date || !description || !type || !amount) return res.status(400).json({ error: "All fields required." });
@@ -105,7 +105,7 @@ app.post('/api/petty_cash', authenticate, isAdmin, async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Error saving transaction." }); }
 });
 
-app.delete('/api/petty_cash/:id', authenticate, isAdmin, async (req, res) => {
+app.delete('/api/petty_cash/:id', authenticate, async (req, res) => {
     try {
         await pool.query('DELETE FROM petty_cash WHERE id = $1', [req.params.id]);
         io.emit('finance_changed');
@@ -158,7 +158,7 @@ app.put('/api/bookings/:id', authenticate, async (req, res) => {
         const d_paid = parseFloat(dp_paid) || 0;
         const remaining = t_price - d_paid;
 
-        const overlap = await pool.query(`SELECT id FROM bookings WHERE date = $1 AND id != $2 AND ($3 < end_time AND $4 > start_time)`, [date, id, start_time, end_time]);
+        const overlap = await pool.query(`SELECT id FROM bookings WHERE date = $1 AND id != $2 AND ($3 < end_time AND $4 > start_time)`,[date, id, start_time, end_time]);
         if (overlap.rows.length > 0) return res.status(400).json({ error: "Time slot is already booked." });
 
         await pool.query(
