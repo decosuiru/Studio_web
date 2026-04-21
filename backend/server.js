@@ -168,12 +168,12 @@ app.post('/api/bookings', authenticate, async (req, res) => {
         const remaining = t_price - d_paid - s_paid;
         const status = calculateStatus(t_price, d_paid + s_paid);
         
-        const overlap = await pool.query(`SELECT id FROM bookings WHERE date = $1 AND ($2 < end_time AND $3 > start_time)`, [date, start_time, end_time]);
-        if (overlap.rows.length > 0) return res.status(400).json({ error: "Time slot is already booked." });
-
-        // Safe JavaScript Date Injection
+        // Handle timestamps safely in Node.js instead of SQL
         const dp_time = d_paid > 0 ? new Date() : null;
         const settlement_time = s_paid > 0 ? new Date() : null;
+        
+        const overlap = await pool.query(`SELECT id FROM bookings WHERE date = $1 AND ($2 < end_time AND $3 > start_time)`,[date, start_time, end_time]);
+        if (overlap.rows.length > 0) return res.status(400).json({ error: "Time slot is already booked." });
 
         const query = `
             INSERT INTO bookings (client_name, customer_type, client_email, client_phone, date, start_time, end_time, total_price, dp_paid, settlement_paid, remaining_payment, status, dp_time, settlement_time) 
@@ -183,8 +183,8 @@ app.post('/api/bookings', authenticate, async (req, res) => {
         io.emit('bookings_changed');
         res.json({ message: "Booking created" });
     } catch (error) { 
-        console.error("Create Booking Error:", error.message);
-        res.status(500).json({ error: "Error creating booking: " + error.message }); 
+        console.error(error); // Logs exact error to Railway dashboard
+        res.status(500).json({ error: "Error creating booking." }); 
     }
 });
 
@@ -200,11 +200,11 @@ app.put('/api/bookings/:id', authenticate, async (req, res) => {
         const remaining = t_price - d_paid - s_paid;
         const status = calculateStatus(t_price, d_paid + s_paid);
 
-        const overlap = await pool.query(`SELECT id FROM bookings WHERE date = $1 AND id != $2 AND ($3 < end_time AND $4 > start_time)`,[date, id, start_time, end_time]);
-        if (overlap.rows.length > 0) return res.status(400).json({ error: "Time slot is already booked." });
-
         const dp_time = d_paid > 0 ? new Date() : null;
         const settlement_time = s_paid > 0 ? new Date() : null;
+
+        const overlap = await pool.query(`SELECT id FROM bookings WHERE date = $1 AND id != $2 AND ($3 < end_time AND $4 > start_time)`,[date, id, start_time, end_time]);
+        if (overlap.rows.length > 0) return res.status(400).json({ error: "Time slot is already booked." });
 
         const updateQuery = `
             UPDATE bookings SET 
@@ -218,8 +218,8 @@ app.put('/api/bookings/:id', authenticate, async (req, res) => {
         io.emit('bookings_changed');
         res.json({ message: "Booking updated" });
     } catch (error) { 
-        console.error("Update Booking Error:", error.message);
-        res.status(500).json({ error: "Error updating booking: " + error.message }); 
+        console.error(error); 
+        res.status(500).json({ error: "Error updating booking." }); 
     }
 });
 
