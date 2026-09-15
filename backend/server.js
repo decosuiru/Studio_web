@@ -31,23 +31,6 @@ io.on('connection', (socket) => {
 
 const SECRET_KEY = process.env.JWT_SECRET || 'fallback_secret';
 
-// --- AUTO MIGRATE DATABASE ---
-pool.connect()
-    .then(async (client) => {
-        console.log('✅ Connected to Supabase PostgreSQL');
-        try {
-            await client.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS customer_type VARCHAR(50) NOT NULL DEFAULT 'Regular';`);
-            await client.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS settlement_paid DECIMAL(15, 2) NOT NULL DEFAULT 0;`);
-            await client.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS dp_time TIMESTAMP;`);
-            await client.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS settlement_time TIMESTAMP;`);
-        } catch (e) {
-            console.log("Migration check complete.");
-        }
-        client.release();
-    })
-    .catch(err => console.error('❌ Database connection error:', err.stack));
-
-// --- MIDDLEWARE ---
 const authenticate = (req, res, next) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
@@ -136,7 +119,7 @@ app.put('/api/petty_cash/:id', authenticate, async (req, res) => {
 
 app.delete('/api/petty_cash/:id', authenticate, async (req, res) => {
     try {
-        await pool.query('DELETE FROM petty_cash WHERE id = $1',[req.params.id]);
+        await pool.query('DELETE FROM petty_cash WHERE id = $1', [req.params.id]);
         io.emit('finance_changed');
         res.json({ message: "Transaction deleted" });
     } catch (error) { res.status(500).json({ error: "Error deleting transaction." }); }
@@ -144,7 +127,7 @@ app.delete('/api/petty_cash/:id', authenticate, async (req, res) => {
 
 // --- BOOKINGS ---
 const calculateStatus = (price, received) => {
-    if (price === 0) return 'Paid'; 
+    if (price === 0) return 'Paid';
     if (received >= price) return 'Paid';
     if (received > 0) return 'Partial';
     return 'Unpaid';
@@ -168,22 +151,33 @@ app.post('/api/bookings', authenticate, async (req, res) => {
         const remaining = t_price - d_paid - s_paid;
         const status = calculateStatus(t_price, d_paid + s_paid);
         
-        // Handle timestamps safely in Node.js instead of SQL
         const dp_time = d_paid > 0 ? new Date() : null;
         const settlement_time = s_paid > 0 ? new Date() : null;
         
         const overlap = await pool.query(`SELECT id FROM bookings WHERE date = $1 AND ($2 < end_time AND $3 > start_time)`,[date, start_time, end_time]);
         if (overlap.rows.length > 0) return res.status(400).json({ error: "Time slot is already booked." });
 
+        // [NEW] INVOICE NUMBER GENERATOR (JNS-INV/DDMMYYNNN)
+        const dateObj = new Date();
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const yy = String(dateObj.getFullYear()).slice(-2);
+        const prefix = `JNS-INV/${dd}${mm}${yy}`;
+
+        // Get count of bookings created today
+        const countRes = await pool.query(`SELECT COUNT(*) FROM bookings WHERE invoice_no LIKE $1`, [`${prefix}%`]);
+        const nextSeq = String(parseInt(countRes.rows[0].count) + 1).padStart(3, '0');
+        const invoice_no = `${prefix}${nextSeq}`;
+
         const query = `
-            INSERT INTO bookings (client_name, customer_type, client_email, client_phone, date, start_time, end_time, total_price, dp_paid, settlement_paid, remaining_payment, status, dp_time, settlement_time) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`;
-        await pool.query(query,[client_name, customer_type, client_email, client_phone, date, start_time, end_time, t_price, d_paid, s_paid, remaining, status, dp_time, settlement_time]);
+            INSERT INTO bookings (client_name, customer_type, client_email, client_phone, date, start_time, end_time, total_price, dp_paid, settlement_paid, remaining_payment, status, dp_time, settlement_time, invoice_no) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`;
+        await pool.query(query,[client_name, customer_type, client_email, client_phone, date, start_time, end_time, t_price, d_paid, s_paid, remaining, status, dp_time, settlement_time, invoice_no]);
         
         io.emit('bookings_changed');
         res.json({ message: "Booking created" });
     } catch (error) { 
-        console.error(error); // Logs exact error to Railway dashboard
+        console.error(error);
         res.status(500).json({ error: "Error creating booking." }); 
     }
 });
