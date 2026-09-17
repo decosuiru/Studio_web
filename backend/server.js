@@ -157,12 +157,12 @@ app.post('/api/bookings', authenticate, async (req, res) => {
         const overlap = await pool.query(`SELECT id FROM bookings WHERE date = $1 AND ($2 < end_time AND $3 > start_time)`,[date, start_time, end_time]);
         if (overlap.rows.length > 0) return res.status(400).json({ error: "Time slot is already booked." });
 
-        // [NEW] INVOICE NUMBER GENERATOR (JNS-INV/DDMMYYNNN)
+        // [NEW] INVOICE NUMBER GENERATOR (JHS/DDMMYYNNN)
         const dateObj = new Date();
         const dd = String(dateObj.getDate()).padStart(2, '0');
         const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
         const yy = String(dateObj.getFullYear()).slice(-2);
-        const prefix = `JNS-INV/${dd}${mm}${yy}`;
+        const prefix = `JHS/${dd}${mm}${yy}`;
 
         // Get count of bookings created today
         const countRes = await pool.query(`SELECT COUNT(*) FROM bookings WHERE invoice_no LIKE $1`, [`${prefix}%`]);
