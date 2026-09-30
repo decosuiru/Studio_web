@@ -142,9 +142,12 @@ app.get('/api/bookings', authenticate, async (req, res) => {
 
 app.post('/api/bookings', authenticate, async (req, res) => {
     try {
-        // [UPDATED] Mengambil category dari payload req.body
+        // Harus ada 'category' di sini
         const { client_name, customer_type, category, client_email, client_phone, date, start_time, end_time, total_price, dp_paid, settlement_paid } = req.body;
-        if (!client_name || !client_phone || !customer_type || !category) return res.status(400).json({ error: "Name, Phone, Type, and Category required." });
+        
+        if (!client_name || !client_phone || !customer_type || !category) {
+            return res.status(400).json({ error: "Name, Phone, Type, and Category required." });
+        }
 
         const t_price = parseFloat(total_price) || 0;
         const d_paid = parseFloat(dp_paid) || 0;
@@ -168,7 +171,7 @@ app.post('/api/bookings', authenticate, async (req, res) => {
         const nextSeq = String(parseInt(countRes.rows[0].count) + 1).padStart(3, '0');
         const invoice_no = `${prefix}${nextSeq}`;
 
-        // [UPDATED] Memasukkan $3 yaitu category ke dalam INSERT query
+        // Pastikan 'category' masuk ke kolom ke-3 ($3)
         const query = `
             INSERT INTO bookings (client_name, customer_type, category, client_email, client_phone, date, start_time, end_time, total_price, dp_paid, settlement_paid, remaining_payment, status, dp_time, settlement_time, invoice_no) 
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`;
@@ -184,10 +187,12 @@ app.post('/api/bookings', authenticate, async (req, res) => {
 
 app.put('/api/bookings/:id', authenticate, async (req, res) => {
     try {
-        // [UPDATED] Mengambil category dari payload req.body
         const { client_name, customer_type, category, client_email, client_phone, date, start_time, end_time, total_price, dp_paid, settlement_paid } = req.body;
         const { id } = req.params;
-        if (!client_name || !client_phone || !customer_type || !category) return res.status(400).json({ error: "Required fields missing." });
+        
+        if (!client_name || !client_phone || !customer_type || !category) {
+            return res.status(400).json({ error: "Required fields missing." });
+        }
 
         const t_price = parseFloat(total_price) || 0;
         const d_paid = parseFloat(dp_paid) || 0;
@@ -201,7 +206,7 @@ app.put('/api/bookings/:id', authenticate, async (req, res) => {
         const overlap = await pool.query(`SELECT id FROM bookings WHERE date = $1 AND id != $2 AND ($3 < end_time AND $4 > start_time)`,[date, id, start_time, end_time]);
         if (overlap.rows.length > 0) return res.status(400).json({ error: "Time slot is already booked." });
 
-        // [UPDATED] Memasukkan $3 yaitu category ke dalam UPDATE query
+        // Pastikan 'category=$3' ada di dalam UPDATE
         const updateQuery = `
             UPDATE bookings SET 
                 client_name=$1, customer_type=$2, category=$3, client_email=$4, client_phone=$5, date=$6, start_time=$7, end_time=$8, 
