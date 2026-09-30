@@ -2,79 +2,82 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Jane's Studio</title>
+    
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/decosuiru/Studio_web1/main/logo/jane%27sblack.png">
 
-    <title>JANE'S</title>
-    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="shortcut icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/site.webmanifest" />
-
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="alert-box" class="alert hidden"></div>
+    <div id="alert-box" class="ios-alert hidden"></div>
 
-    <div id="login-view" class="view active" style="flex-direction: column;">
+    <!-- LOGIN PAGE -->
+    <div id="login-view" class="view active ios-login-wrapper">
         <img src="https://raw.githubusercontent.com/decosuiru/Studio_web1/main/logo/jane%27swhite.png" alt="Jane's Studio" class="login-logo">
-        <div class="login-card">
-            <h2 class="login-title">Welcome</h2>
+        <div class="ios-glass-panel login-card">
+            <h2 class="ios-title text-center mb-20">Welcome</h2>
             <form id="login-form">
-                <input type="email" id="email" placeholder="Email Address" required>
-                <input type="password" id="password" placeholder="Password" required>
-                <button type="submit" class="primary-btn w-full">Login</button>
+                <input type="email" id="email" class="ios-input" placeholder="Email Address" required>
+                <input type="password" id="password" class="ios-input" placeholder="Password" required>
+                <button type="submit" class="ios-btn ios-btn-primary w-full mt-15">Sign In</button>
             </form>
         </div>
     </div>
 
+    <!-- MAIN APP -->
     <div id="app-view" class="view hidden">
         <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
-        <aside class="sidebar" id="sidebar">
+        <aside class="ios-sidebar" id="sidebar">
             <img src="https://raw.githubusercontent.com/decosuiru/Studio_web1/main/logo/jane%27swhite.png" alt="Jane's Studio" class="sidebar-logo">
-            <nav>
-                <button class="nav-btn" onclick="showSection('calendar')">📅 Calendar</button>
-                <button class="nav-btn" onclick="showSection('bookings')">📋 Bookings</button>
-                <button class="nav-btn admin-only" onclick="showSection('finance')">💰 Finance</button>
-                <button class="nav-btn" onclick="showSection('pettycash')">💵 Petty Cash</button>
-                <button class="nav-btn admin-only" onclick="showSection('accounts')">👥 Accounts</button>
+            <nav class="sidebar-nav">
+                <button class="nav-btn" onclick="showSection('calendar')"><span class="icon">📅</span> Calendar</button>
+                <button class="nav-btn" onclick="showSection('bookings')"><span class="icon">📋</span> Bookings</button>
+                <button class="nav-btn admin-only" onclick="showSection('finance')"><span class="icon">💰</span> Finance</button>
+                <button class="nav-btn" onclick="showSection('pettycash')"><span class="icon">💵</span> Petty Cash</button>
+                <button class="nav-btn admin-only" onclick="showSection('accounts')"><span class="icon">👥</span> Accounts</button>
             </nav>
-            <button class="logout-btn" onclick="logout()">Logout</button>
+            <button class="ios-btn ios-btn-danger mt-auto" onclick="logout()">Logout</button>
         </aside>
 
         <main class="content">
-            <header>
+            <header class="ios-header">
                 <div class="header-left">
-                    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-                    <h2 id="section-title">Calendar</h2>
+                    <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    </button>
+                    <h2 id="section-title" class="ios-large-title">Calendar</h2>
                 </div>
                 <div class="header-right">
-                    <span id="sync-status" class="sync-indicator">🟢 Live</span>
-                    <button class="primary-btn shadow-btn" onclick="openBookingModal()">+ New</button>
+                    <span id="sync-status" class="sync-indicator">Live</span>
+                    <button class="ios-btn ios-btn-primary" onclick="openBookingModal()">+ New</button>
                 </div>
             </header>
 
             <section id="calendar-section" class="section active">
-                <div class="calendar-wrapper">
+                <div class="ios-glass-panel calendar-wrapper">
                     <div id="calendar"></div>
                     <div id="mobile-event-list" class="mobile-only-list hidden mt-15">
-                        <h4 id="mobile-event-date" style="color: var(--danger); font-size: 16px; margin-bottom: 10px; padding-left: 5px;"></h4>
-                        <div id="mobile-event-items"></div>
+                        <h4 id="mobile-event-date" class="ios-subtitle text-primary mb-10"></h4>
+                        <div id="mobile-event-items" class="flex-col gap-10"></div>
                     </div>
                 </div>
             </section>
 
             <section id="bookings-section" class="section hidden">
-                <div id="ongoing-session-container" class="mb-15"></div>
-                <div class="tab-container">
-                    <button id="tab-booking-upcoming" class="tab-btn active-tab" onclick="toggleBookingView('upcoming')">Upcoming</button>
-                    <button id="tab-booking-recent" class="tab-btn" onclick="toggleBookingView('recent')">Recent (Past)</button>
+                <div id="ongoing-session-container" class="mb-20"></div>
+                
+                <div class="ios-segmented-control mb-15">
+                    <button id="tab-booking-upcoming" class="seg-btn active" onclick="toggleBookingView('upcoming')">Upcoming</button>
+                    <button id="tab-booking-recent" class="seg-btn" onclick="toggleBookingView('recent')">Recent</button>
                 </div>
-                <div class="table-container mt-15">
-                    <table id="bookings-table">
+                
+                <div class="ios-glass-panel table-container">
+                    <table id="bookings-table" class="ios-table">
                         <thead><tr><th>Date</th><th class="hide-mobile">Time</th><th>Client</th><th class="hide-mobile">Type</th><th class="hide-mobile">Received</th><th>Status</th><th>Action</th></tr></thead>
                         <tbody></tbody>
                     </table>
@@ -82,61 +85,84 @@
             </section>
 
             <section id="finance-section" class="section hidden">
-                <div class="filter-bar">
-                    <select id="finance-filter" onchange="renderFinanceTable()">
+                <div class="ios-glass-panel mb-20 flex-row align-center gap-15 flex-wrap" style="padding: 12px 20px;">
+                    <select id="finance-filter" class="ios-select auto-width" onchange="handleFinanceFilter()">
                         <option value="month" selected>This Month</option>
                         <option value="day">Today</option>
                         <option value="week">This Week</option>
                         <option value="all">All Time</option>
-                        <option value="custom">Custom Date</option>
+                        <option value="custom">Custom Range</option>
                     </select>
-                    <div id="finance-custom" class="hidden time-group" style="margin-bottom:0;">
-                        <input type="date" id="fin-start"> <span style="color:white">to</span> <input type="date" id="fin-end">
-                        <button class="primary-btn" onclick="renderFinanceTable()">Apply</button>
+                    <div id="finance-custom" class="hidden flex-row align-center gap-10">
+                        <input type="date" id="fin-start" class="ios-input small-input"> <span class="text-secondary">to</span> <input type="date" id="fin-end" class="ios-input small-input">
+                        <button class="ios-btn ios-btn-primary small-btn" onclick="renderFinanceTable()">Apply</button>
                     </div>
                 </div>
 
-                <div class="cards-grid mt-15">
-                    <div class="card"><h3>Gross Booking</h3><p class="amount" id="fin-income">Rp 0</p></div>
-                    <div class="card bg-green"><h3>Total Received</h3><p class="amount text-green" id="fin-dp">Rp 0</p></div>
-                    <div class="card bg-red"><h3>Unpaid Balance</h3><p class="amount text-red" id="fin-remain">Rp 0</p></div>
+                <div class="cards-grid mb-20">
+                    <div class="ios-glass-panel card">
+                        <h3 class="card-label">Gross Booking</h3>
+                        <p class="amount" id="fin-income">Rp 0</p>
+                    </div>
+                    <div class="ios-glass-panel card highlight-green">
+                        <h3 class="card-label">Total Received</h3>
+                        <p class="amount text-green" id="fin-dp">Rp 0</p>
+                    </div>
+                    <div class="ios-glass-panel card highlight-red">
+                        <h3 class="card-label">Unpaid Balance</h3>
+                        <p class="amount text-red" id="fin-remain">Rp 0</p>
+                    </div>
                 </div>
-                <h3 class="mt-20 mb-15" style="color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">Transaction History</h3>
-                <div class="table-container mt-15">
-                    <table id="finance-table">
-                        <thead><tr><th>Date & Time</th><th>Client Info</th><th class="hide-mobile">Total Booking</th><th>Type</th><th>Amount Received</th><th>Status</th></tr></thead>
+                
+                <div class="flex-row justify-between align-center mb-15">
+                    <h3 class="ios-title">Transactions</h3>
+                    <div class="ios-segmented-control">
+                        <button id="tab-finance-upcoming" class="seg-btn active" onclick="toggleFinanceView('upcoming')">Upcoming</button>
+                        <button id="tab-finance-recent" class="seg-btn" onclick="toggleFinanceView('recent')">Recent</button>
+                    </div>
+                </div>
+                
+                <div class="ios-glass-panel table-container">
+                    <table id="finance-table" class="ios-table">
+                        <thead><tr><th>Date & Time</th><th>Client Info</th><th class="hide-mobile">Total</th><th class="hide-mobile">Received</th><th class="hide-mobile">Remaining</th><th>Status</th></tr></thead>
                         <tbody></tbody>
                     </table>
                 </div>
             </section>
 
             <section id="pettycash-section" class="section hidden">
-                <div class="filter-bar">
-                    <select id="pc-filter" onchange="handlePcFilter()">
+                <div class="ios-glass-panel mb-20 flex-row align-center gap-15 flex-wrap" style="padding: 12px 20px;">
+                    <select id="pc-filter" class="ios-select auto-width" onchange="handlePcFilter()">
                         <option value="month" selected>This Month</option>
                         <option value="day">Today</option>
                         <option value="week">This Week</option>
                         <option value="all">All Time</option>
-                        <option value="custom">Custom Date</option>
+                        <option value="custom">Custom Range</option>
                     </select>
-                    <div id="pc-custom" class="hidden time-group" style="margin-bottom:0;">
-                        <input type="date" id="pc-start"> <span style="color:white">to</span> <input type="date" id="pc-end">
-                        <button class="primary-btn" onclick="renderPettyCash()">Apply</button>
+                    <div id="pc-custom" class="hidden flex-row align-center gap-10">
+                        <input type="date" id="pc-start" class="ios-input small-input"> <span class="text-secondary">to</span> <input type="date" id="pc-end" class="ios-input small-input">
+                        <button class="ios-btn ios-btn-primary small-btn" onclick="renderPettyCash()">Apply</button>
                     </div>
                 </div>
 
-                <div class="cards-grid mt-15 mb-20" style="grid-template-columns: 1fr 1fr;">
-                    <div class="card bg-green"><h3>Overall Safe Balance</h3><p class="amount text-green" id="pc-balance">Rp 0</p></div>
-                    <div class="card bg-red"><h3>Filtered Cash Out</h3><p class="amount text-red" id="pc-out">Rp 0</p></div>
+                <div class="cards-grid mb-20" style="grid-template-columns: 1fr 1fr;">
+                    <div class="ios-glass-panel card highlight-primary">
+                        <h3 class="card-label">Safe Balance</h3>
+                        <p class="amount text-primary" id="pc-balance">Rp 0</p>
+                    </div>
+                    <div class="ios-glass-panel card highlight-red">
+                        <h3 class="card-label">Filtered Cash Out</h3>
+                        <p class="amount text-red" id="pc-out">Rp 0</p>
+                    </div>
                 </div>
                 
-                <div style="display:flex; gap:15px; margin-bottom: 15px;">
-                    <button class="primary-btn shadow-btn w-full" onclick="openPcModal()">+ Add Transaction</button>
-                    <button class="del-btn shadow-btn admin-only" onclick="withdrawAllPettyCash()" style="width: auto; white-space: nowrap;">Withdraw All (Reset)</button>
+                <div class="flex-row gap-15 mb-20">
+                    <button class="ios-btn ios-btn-primary flex-1" onclick="openPcModal()">+ Add Transaction</button>
+                    <button class="ios-btn ios-btn-danger admin-only" onclick="withdrawAllPettyCash()">Withdraw All</button>
                 </div>
 
-                <div class="table-container">
-                    <table id="pc-table">
+                <div class="ios-glass-panel table-container">
+                    <table id="pc-table" class="ios-table">
                         <thead><tr><th>Date</th><th>Description</th><th class="hide-mobile">Type</th><th>Amount</th><th>Action</th></tr></thead>
                         <tbody></tbody>
                     </table>
@@ -144,18 +170,18 @@
             </section>
 
             <section id="accounts-section" class="section hidden">
-                <div class="cards-grid" style="grid-template-columns: 1fr 2fr;">
-                    <div class="card text-left hide-mobile">
-                        <h3>+ Add Account</h3>
-                        <form id="account-form" class="mt-15">
-                            <select id="acc_role" required><option value="Admin">Admin</option><option value="Staff">Staff</option></select>
-                            <input type="email" id="acc_email" placeholder="Email" required>
-                            <input type="password" id="acc_password" placeholder="Password" required>
-                            <button type="submit" class="primary-btn w-full">Create</button>
+                <div class="grid-2-col gap-20">
+                    <div class="ios-glass-panel card hide-mobile" style="align-self: start;">
+                        <h3 class="ios-title mb-15">Add Account</h3>
+                        <form id="account-form">
+                            <select id="acc_role" class="ios-select mb-15" required><option value="Admin">Admin</option><option value="Staff">Staff</option></select>
+                            <input type="email" id="acc_email" class="ios-input mb-15" placeholder="Email Address" required>
+                            <input type="password" id="acc_password" class="ios-input mb-20" placeholder="Password" required>
+                            <button type="submit" class="ios-btn ios-btn-primary w-full">Create Account</button>
                         </form>
                     </div>
-                    <div class="table-container">
-                        <table id="accounts-table">
+                    <div class="ios-glass-panel table-container">
+                        <table id="accounts-table" class="ios-table">
                             <thead><tr><th>Email</th><th>Role</th><th class="hide-mobile">Created</th><th>Action</th></tr></thead>
                             <tbody></tbody>
                         </table>
@@ -165,101 +191,102 @@
         </main>
     </div>
 
-    <!-- MODALS (Petty Cash & Account) -->
-    <div id="pc-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3 id="pc-modal-title">Add Petty Cash</h3>
-            <form id="pc-form" class="mt-15">
+    <!-- PETTY CASH FORM MODAL -->
+    <div id="pc-modal" class="ios-modal hidden">
+        <div class="ios-modal-content">
+            <h3 id="pc-modal-title" class="ios-title text-center mb-20">Add Petty Cash</h3>
+            <form id="pc-form">
                 <input type="hidden" id="pc_id">
-                <input type="date" id="pc_date" required>
-                <input type="text" id="pc_desc" placeholder="Description" required>
-                <select id="pc_type" required>
-                    <option value="IN">Cash IN (+)</option>
-                    <option value="OUT">Cash OUT (-)</option>
+                <input type="date" id="pc_date" class="ios-input mb-15" required>
+                <input type="text" id="pc_desc" class="ios-input mb-15" placeholder="Description" required>
+                <select id="pc_type" class="ios-select mb-15" required>
+                    <option value="IN">Cash In (+)</option>
+                    <option value="OUT">Cash Out (-)</option>
                 </select>
-                <input type="number" id="pc_amount" placeholder="Amount (Rp)" required>
-                <div class="modal-actions mt-20">
-                    <button type="button" class="cancel-btn" onclick="closePcModal()">Cancel</button>
-                    <button type="submit" class="primary-btn">Save</button>
+                <input type="number" id="pc_amount" class="ios-input mb-20" placeholder="Amount (Rp)" required>
+                <div class="flex-row gap-10">
+                    <button type="button" class="ios-btn ios-btn-secondary flex-1" onclick="closePcModal()">Cancel</button>
+                    <button type="submit" class="ios-btn ios-btn-primary flex-1">Save</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="pc-detail-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3>Transaction Details</h3>
-            <div class="detail-grid mt-15">
-                <div><span class="detail-label">Date:</span> <strong id="pc_det_date"></strong></div>
-                <div><span class="detail-label">Description:</span> <strong id="pc_det_desc"></strong></div>
-                <div><span class="detail-label">Type:</span> <span id="pc_det_type" class="role-pill"></span></div>
-                <div><span class="detail-label">Amount:</span> <strong id="pc_det_amount"></strong></div>
+    <!-- PETTY CASH DETAIL MODAL -->
+    <div id="pc-detail-modal" class="ios-modal hidden">
+        <div class="ios-modal-content">
+            <h3 class="ios-title text-center mb-20">Transaction Details</h3>
+            <div class="ios-list-group mb-20">
+                <div class="ios-list-item"><span>Date</span> <strong id="pc_det_date"></strong></div>
+                <div class="ios-list-item"><span>Description</span> <strong id="pc_det_desc"></strong></div>
+                <div class="ios-list-item"><span>Type</span> <span id="pc_det_type" class="ios-badge"></span></div>
+                <div class="ios-list-item"><span>Amount</span> <strong id="pc_det_amount"></strong></div>
             </div>
-            <div class="modal-actions mt-20">
-                <button type="button" class="del-btn" id="btn-del-pc">Delete</button>
-                <button type="button" class="cancel-btn" onclick="closePcDetailModal()">Close</button>
-                <button type="button" class="primary-btn" id="btn-edit-pc">Edit</button>
+            <div class="flex-row gap-10">
+                <button type="button" class="ios-btn ios-btn-danger" id="btn-del-pc">Delete</button>
+                <button type="button" class="ios-btn ios-btn-secondary flex-1" onclick="closePcDetailModal()">Close</button>
+                <button type="button" class="ios-btn ios-btn-primary flex-1" id="btn-edit-pc">Edit</button>
             </div>
         </div>
     </div>
 
     <!-- BOOKING DETAIL MODAL -->
-    <div id="detail-modal" class="modal hidden">
-        <div class="modal-content">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <h3>Booking Details</h3>
-                <!-- [NEW] Print Button -->
-                <button type="button" class="shadow-btn" style="background: #111827; color: white; padding: 6px 12px; font-size: 12px; margin:0;" onclick="printInvoice()">🖨️ Print Receipt</button>
+    <div id="detail-modal" class="ios-modal hidden">
+        <div class="ios-modal-content large">
+            <div class="flex-row justify-between align-center mb-20">
+                <h3 class="ios-title">Booking Details</h3>
+                <button type="button" class="ios-btn ios-btn-tertiary small-btn" onclick="printInvoice()">Print Receipt</button>
             </div>
             
-            <div class="detail-grid mt-15">
-                <div><span class="detail-label">Receipt No:</span> <strong id="det_inv_no" style="color: var(--primary-dark);"></strong></div>
-                <div><span class="detail-label">Status:</span> <span id="det_status" class="status-pill"></span></div>
-                <div><span class="detail-label">Client Name:</span> <strong id="det_name"></strong></div>
-                <div><span class="detail-label">Customer Type:</span> <strong id="det_type"></strong></div>
-                <div><span class="detail-label">Category / Package:</span> <strong id="det_category"></strong></div>
-                <div><span class="detail-label">Phone:</span> <span id="det_phone"></span></div>
-                <div><span class="detail-label">Email:</span> <span id="det_email"></span></div>
-                <div><span class="detail-label">Date:</span> <strong id="det_date"></strong></div>
-                <div style="background: rgba(249, 250, 251, 0.8); padding: 10px; border-radius: 8px;">
-                    <span class="detail-label" style="font-weight: bold; color: var(--primary-dark);">Time:</span> 
-                    <strong id="det_time" style="font-size: 18px; color: var(--primary);"></strong>
+            <div class="ios-list-group mb-20">
+                <div class="ios-list-item"><span>Receipt No</span> <strong id="det_inv_no" class="text-primary"></strong></div>
+                <div class="ios-list-item"><span>Status</span> <span id="det_status" class="ios-badge"></span></div>
+                <div class="ios-list-item"><span>Client Name</span> <strong id="det_name"></strong></div>
+                <div class="ios-list-item"><span>Package</span> <strong id="det_category"></strong></div>
+                <div class="ios-list-item"><span>Customer Type</span> <strong id="det_type"></strong></div>
+                <div class="ios-list-item"><span>Phone</span> <span id="det_phone"></span></div>
+                <div class="ios-list-item"><span>Email</span> <span id="det_email" class="text-secondary"></span></div>
+                
+                <div class="ios-list-item highlight">
+                    <span>Schedule</span> 
+                    <div class="text-right">
+                        <strong id="det_date" style="display:block;"></strong>
+                        <strong id="det_time" class="text-primary text-lg"></strong>
+                    </div>
                 </div>
-                <div><span class="detail-label">Total Price:</span> <strong id="det_total"></strong></div>
                 
-                <div><span class="detail-label text-green">DP / First Payment:</span> <div style="text-align: right;"><strong class="text-green text-lg" id="det_dp"></strong></div></div>
-                <div id="det_settlement_row" class="hidden"><span class="detail-label text-green">Settlement / Final:</span> <div style="text-align: right;"><strong class="text-green text-lg" id="det_settlement"></strong></div></div>
-                
-                <div><span class="detail-label text-red">Remaining:</span> <strong class="text-red" id="det_remain"></strong></div>
+                <div class="ios-list-item"><span>Total Price</span> <strong id="det_total"></strong></div>
+                <div class="ios-list-item"><span>First Payment (DP)</span> <div class="text-right"><strong class="text-green text-lg" id="det_dp"></strong></div></div>
+                <div id="det_settlement_row" class="ios-list-item hidden"><span>Settlement</span> <div class="text-right"><strong class="text-green text-lg" id="det_settlement"></strong></div></div>
+                <div class="ios-list-item"><span>Remaining Balance</span> <strong class="text-red" id="det_remain"></strong></div>
             </div>
 
-            <button type="button" id="btn-settle-from-detail" class="w-full mt-15 shadow-btn" style="background: #10B981; color: white; padding: 12px; border-radius: 12px; border: none; font-weight: 600; font-size: 15px; cursor: pointer; transition: 0.2s;">💰 Add Settlement</button>
+            <button type="button" id="btn-settle-from-detail" class="ios-btn ios-btn-success w-full mb-15">Add Settlement</button>
 
-            <div class="modal-actions mt-15">
-                <button type="button" class="del-btn" id="delete-btn" onclick="deleteFromModal()">Delete</button>
-                <button type="button" class="cancel-btn" onclick="closeDetailModal()">Close</button>
-                <button type="button" class="primary-btn" id="btn-edit-from-detail">Edit</button>
+            <div class="flex-row gap-10">
+                <button type="button" class="ios-btn ios-btn-danger" id="delete-btn" onclick="deleteFromModal()">Delete</button>
+                <button type="button" class="ios-btn ios-btn-secondary flex-1" onclick="closeDetailModal()">Close</button>
+                <button type="button" class="ios-btn ios-btn-primary flex-1" id="btn-edit-from-detail">Edit</button>
             </div>
         </div>
     </div>
 
     <!-- BOOKING FORM MODAL -->
-    <div id="booking-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3 id="modal-title">New Booking</h3>
-            <form id="booking-form" class="mt-15">
+    <div id="booking-modal" class="ios-modal hidden">
+        <div class="ios-modal-content large">
+            <h3 id="modal-title" class="ios-title text-center mb-20">New Booking</h3>
+            <form id="booking-form">
                 <input type="hidden" id="booking_id">
-                <div class="form-group">
-                    <select id="customer_type" required onchange="handleCustomerTypeChange()">
-                        <option value="" disabled selected>Select Customer Type *</option>
+                
+                <div class="grid-2-col gap-15 mb-15">
+                    <select id="customer_type" class="ios-select" required onchange="handleCustomerTypeChange()">
+                        <option value="" disabled selected>Customer Type *</option>
                         <option value="Regular">Regular</option>
                         <option value="Vendor">Vendor</option>
                         <option value="Management">Management</option>
                     </select>
-                </div>
-                <div class="form-group">
-                    <select id="booking_category" required>
-                        <option value="" disabled selected>Select Package Category *</option>
+                    <select id="booking_category" class="ios-select" required>
+                        <option value="" disabled selected>Package Category *</option>
                         <option value="Studio Only">Studio Only</option>
                         <option value="Studio & Team">Studio & Team</option>
                         <option value="Couple Package">Couple Package</option>
@@ -268,103 +295,117 @@
                         <option value="Custom">Custom</option>
                     </select>
                 </div>
-                <input type="text" id="client_name" placeholder="Client Name *" required>
-                <input type="text" id="client_phone" placeholder="Phone Number *" required>
-                <input type="email" id="client_email" placeholder="Email (Optional)">
-                <div class="time-group">
-                    <input type="date" id="date" required>
-                    <input type="time" id="start_time" required> <span class="to-txt">to</span> <input type="time" id="end_time" required>
+
+                <input type="text" id="client_name" class="ios-input mb-15" placeholder="Client Name *" required>
+                
+                <div class="grid-2-col gap-15 mb-15">
+                    <input type="text" id="client_phone" class="ios-input" placeholder="Phone Number *" required>
+                    <input type="email" id="client_email" class="ios-input" placeholder="Email (Optional)">
+                </div>
+
+                <div class="ios-list-group mb-20" style="background: rgba(255,255,255,0.4);">
+                    <div class="ios-list-item border-none">
+                        <input type="date" id="date" class="ios-input flex-1" required>
+                    </div>
+                    <div class="ios-list-item flex-row gap-10 align-center">
+                        <input type="time" id="start_time" class="ios-input flex-1" required>
+                        <span class="text-secondary font-medium">to</span>
+                        <input type="time" id="end_time" class="ios-input flex-1" required>
+                    </div>
                 </div>
                 
-                <div id="price-section" class="time-group">
+                <div id="price-section" class="grid-2-col gap-15 mb-15">
                     <div>
-                        <span class="detail-label">Total Price *</span>
-                        <input type="number" id="total_price" placeholder="Rp" oninput="calcRemaining()" required>
+                        <label class="ios-label">Total Price *</label>
+                        <input type="number" id="total_price" class="ios-input" placeholder="Rp" oninput="calcRemaining()" required>
                     </div>
                     <div>
-                        <span class="detail-label text-green">Total Received *</span>
-                        <input type="number" id="dp_paid" placeholder="Rp" oninput="calcRemaining()" required>
+                        <label class="ios-label text-green">Total Received *</label>
+                        <input type="number" id="dp_paid" class="ios-input" placeholder="Rp" oninput="calcRemaining()" required>
                     </div>
                 </div>
 
-                <div id="settlement-section" class="hidden mt-15" style="padding: 15px; border-radius: 12px; background: #ECFDF5; border: 1px solid #D1FAE5; margin-bottom: 15px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <span style="font-size: 13px; font-weight: 600; color: #065F46;">Settlement Payment</span>
-                        <button type="button" onclick="markAsFullyPaid()" style="background: #10B981; color: white; padding: 6px 12px; border-radius: 8px; border: none; font-weight: bold; font-size: 12px; cursor: pointer;">Settle Full</button>
+                <div id="settlement-section" class="hidden mb-15 p-15" style="background: rgba(16, 185, 129, 0.1); border-radius: 16px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                    <div class="flex-row justify-between align-center mb-10">
+                        <span class="text-green font-bold">Settlement Payment</span>
+                        <button type="button" onclick="markAsFullyPaid()" class="ios-btn ios-btn-success small-btn">Settle Full</button>
                     </div>
-                    <input type="number" id="settlement_input" placeholder="Amount (Rp)" oninput="calcRemaining()" style="margin-bottom: 0;">
+                    <input type="number" id="settlement_input" class="ios-input" placeholder="Amount (Rp)" oninput="calcRemaining()" style="margin-bottom: 0;">
                 </div>
 
-                <p class="calc-text text-red" id="remaining-text-wrapper">Remaining: <strong id="remaining-text">Rp 0</strong></p>
-                <div class="modal-actions">
-                    <button type="button" class="cancel-btn" onclick="closeBookingModal()">Cancel</button>
-                    <button type="submit" class="primary-btn">Save</button>
+                <div id="remaining-text-wrapper" class="text-right mb-20">
+                    <span class="text-secondary font-medium">Remaining:</span> <strong id="remaining-text" class="text-red text-lg">Rp 0</strong>
+                </div>
+
+                <div class="flex-row gap-10">
+                    <button type="button" class="ios-btn ios-btn-secondary flex-1" onclick="closeBookingModal()">Cancel</button>
+                    <button type="submit" class="ios-btn ios-btn-primary flex-1">Save Booking</button>
                 </div>
             </form>
         </div>
     </div>
 
-<!-- [UPDATED] INVOICE TEMPLATE (ISOLATION METHOD) -->
-    <div id="invoice-print-container" class="hidden">
-        <div id="invoice-template" style="padding: 30px; background: white; color: #1F2937; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; width: 700px; box-sizing: border-box; margin: 0;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #F3F4F6; padding-bottom: 15px; margin-bottom: 15px;">
-                <img src="https://raw.githubusercontent.com/decosuiru/Studio_web1/main/logo/jane%27sblack.png" style="max-height: 40px;">
+    <!-- HIDDEN INVOICE BLUEPRINT (CLONING METHOD) -->
+    <div style="display: none;">
+        <div id="invoice-template" style="padding: 40px; background: white; color: #1F2937; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; width: 800px; margin: 0; box-sizing: border-box;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #F3F4F6; padding-bottom: 15px; margin-bottom: 20px;">
+                <img src="https://raw.githubusercontent.com/decosuiru/Studio_web1/main/logo/jane%27sblack.png" style="max-height: 45px;">
                 <div style="text-align: right;">
-                    <h1 style="color: #4F46E5; margin: 0; font-size: 24px;">Receipt</h1>
-                    <p style="margin: 5px 0 0 0; font-weight: bold; color: #6B7280; font-size: 12px;" id="print_inv_no"></p>
+                    <h1 style="color: #4F46E5; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px;">Receipt</h1>
+                    <p style="margin: 5px 0 0 0; font-weight: bold; color: #6B7280; font-size: 13px;" id="print_inv_no"></p>
                 </div>
             </div>
             
-            <div style="display: flex; justify-content: space-between; margin-bottom: 25px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
                 <div>
-                    <p style="color: #6B7280; font-size: 11px; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 1px;">Booked By:</p>
-                    <h3 style="margin: 0 0 3px 0; font-size: 16px;" id="print_name"></h3>
-                    <p style="margin: 0; color: #4B5563; font-size: 13px;" id="print_phone"></p>
-                    <p style="margin: 0; color: #4B5563; font-size: 13px;" id="print_type"></p>
+                    <p style="color: #9CA3AF; font-size: 11px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Booked By:</p>
+                    <h3 style="margin: 0 0 4px 0; font-size: 18px; font-weight: 700;" id="print_name"></h3>
+                    <p style="margin: 0 0 2px 0; color: #4B5563; font-size: 14px;" id="print_phone"></p>
+                    <p style="margin: 0 0 2px 0; color: #4B5563; font-size: 14px;" id="print_type"></p>
                     <p style="margin: 0; color: #4B5563; font-size: 14px; font-weight: 600;" id="print_category"></p>
                 </div>
                 <div style="text-align: right;">
-                    <p style="color: #6B7280; font-size: 11px; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 1px;">Status:</p>
-                    <h3 style="margin: 0; font-size: 16px; color: #10B981;" id="print_status"></h3>
+                    <p style="color: #9CA3AF; font-size: 11px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Status:</p>
+                    <h3 style="margin: 0; font-size: 18px; color: #10B981; font-weight: 800;" id="print_status"></h3>
                 </div>
             </div>
 
-            <div style="background: #F9FAFB; padding: 15px; border-radius: 8px; margin-bottom: 25px;">
-                <h4 style="margin: 0 0 10px 0; color: #1F2937; border-bottom: 1px solid #E5E7EB; padding-bottom: 8px; font-size: 14px;">Event Details</h4>
-                <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                    <div><span style="color: #6B7280;">Date:</span> <strong id="print_date"></strong></div>
-                    <div><span style="color: #6B7280;">Time:</span> <strong id="print_time"></strong></div>
+            <div style="background: #F9FAFB; padding: 20px; border-radius: 12px; margin-bottom: 30px; border: 1px solid #F3F4F6;">
+                <h4 style="margin: 0 0 10px 0; color: #1F2937; border-bottom: 1px solid #E5E7EB; padding-bottom: 8px; font-size: 15px; font-weight: 600;">Event Details</h4>
+                <div style="display: flex; justify-content: space-between; font-size: 15px;">
+                    <div><span style="color: #6B7280; font-weight: 500;">Date:</span> <strong id="print_date"></strong></div>
+                    <div><span style="color: #6B7280; font-weight: 500;">Time:</span> <strong id="print_time"></strong></div>
                 </div>
             </div>
 
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
                 <thead>
                     <tr style="border-bottom: 2px solid #E5E7EB;">
-                        <th style="text-align: left; padding: 10px 0; color: #6B7280; font-size: 13px;">Description</th>
-                        <th style="text-align: right; padding: 10px 0; color: #6B7280; font-size: 13px;">Amount</th>
+                        <th style="text-align: left; padding: 12px 0; color: #6B7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Description</th>
+                        <th style="text-align: right; padding: 12px 0; color: #6B7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Amount</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td style="padding: 12px 0; border-bottom: 1px solid #F3F4F6; font-size: 14px;"><strong>Total Booking Price</strong></td>
-                        <td style="text-align: right; padding: 12px 0; border-bottom: 1px solid #F3F4F6; font-size: 14px;"><strong id="print_total"></strong></td>
+                        <td style="padding: 16px 0; border-bottom: 1px solid #F3F4F6; font-size: 15px; color: #1F2937;"><strong>Total Booking Price</strong></td>
+                        <td style="text-align: right; padding: 16px 0; border-bottom: 1px solid #F3F4F6; font-size: 15px; color: #1F2937;"><strong id="print_total"></strong></td>
                     </tr>
                     <tr>
-                        <td style="padding: 12px 0; border-bottom: 1px solid #F3F4F6; color: #10B981; font-size: 14px;">DP / First Payment</td>
-                        <td style="text-align: right; padding: 12px 0; border-bottom: 1px solid #F3F4F6; color: #10B981; font-size: 14px;" id="print_dp"></td>
+                        <td style="padding: 16px 0; border-bottom: 1px solid #F3F4F6; color: #059669; font-size: 15px; font-weight: 500;">DP / First Payment</td>
+                        <td style="text-align: right; padding: 16px 0; border-bottom: 1px solid #F3F4F6; color: #059669; font-size: 15px; font-weight: 600;" id="print_dp"></td>
                     </tr>
                     <tr id="print_settle_row">
-                        <td style="padding: 12px 0; border-bottom: 1px solid #F3F4F6; color: #10B981; font-size: 14px;">Settlement / Final Payment</td>
-                        <td style="text-align: right; padding: 12px 0; border-bottom: 1px solid #F3F4F6; color: #10B981; font-size: 14px;" id="print_settle"></td>
+                        <td style="padding: 16px 0; border-bottom: 1px solid #F3F4F6; color: #059669; font-size: 15px; font-weight: 500;">Settlement / Final Payment</td>
+                        <td style="text-align: right; padding: 16px 0; border-bottom: 1px solid #F3F4F6; color: #059669; font-size: 15px; font-weight: 600;" id="print_settle"></td>
                     </tr>
                     <tr>
-                        <td style="padding: 12px 0; color: #EF4444; font-size: 14px;"><strong>Remaining Payment</strong></td>
-                        <td style="text-align: right; padding: 12px 0; color: #EF4444; font-size: 14px;"><strong id="print_remain"></strong></td>
+                        <td style="padding: 16px 0; color: #DC2626; font-size: 15px; font-weight: 600;">Remaining Payment</td>
+                        <td style="text-align: right; padding: 16px 0; color: #DC2626; font-size: 15px; font-weight: 700;" id="print_remain"></td>
                     </tr>
                 </tbody>
             </table>
             
-            <div style="text-align: center; color: #9CA3AF; font-size: 11px; margin-top: 30px;">
+            <div style="text-align: center; color: #9CA3AF; font-size: 12px; margin-top: 40px; font-weight: 500;">
                 Thank you for choosing Jane's Home Studio
             </div>
         </div>
