@@ -184,9 +184,13 @@ app.post('/api/bookings', authenticate, async (req, res) => {
 
 app.put('/api/bookings/:id', authenticate, async (req, res) => {
     try {
-        const { client_name, customer_type, client_email, client_phone, date, start_time, end_time, total_price, dp_paid, settlement_paid } = req.body;
+        // Pastikan 'category' ditarik dari req.body
+        const { client_name, customer_type, category, client_email, client_phone, date, start_time, end_time, total_price, dp_paid, settlement_paid } = req.body;
         const { id } = req.params;
-        if (!client_name || !client_phone || !customer_type) return res.status(400).json({ error: "Required fields missing." });
+        
+        if (!client_name || !client_phone || !customer_type || !category) {
+            return res.status(400).json({ error: "Required fields missing." });
+        }
 
         const t_price = parseFloat(total_price) || 0;
         const d_paid = parseFloat(dp_paid) || 0;
@@ -200,14 +204,16 @@ app.put('/api/bookings/:id', authenticate, async (req, res) => {
         const overlap = await pool.query(`SELECT id FROM bookings WHERE date = $1 AND id != $2 AND ($3 < end_time AND $4 > start_time)`,[date, id, start_time, end_time]);
         if (overlap.rows.length > 0) return res.status(400).json({ error: "Time slot is already booked." });
 
+        // Pastikan category=$3 masuk di query
         const updateQuery = `
             UPDATE bookings SET 
-                client_name=$1, customer_type=$2, client_email=$3, client_phone=$4, date=$5, start_time=$6, end_time=$7, 
-                total_price=$8, dp_paid=$9, settlement_paid=$10, remaining_payment=$11, status=$12,
-                dp_time = COALESCE(dp_time, $13),
-                settlement_time = COALESCE(settlement_time, $14)
-            WHERE id=$15`;
-        await pool.query(updateQuery,[client_name, customer_type, client_email, client_phone, date, start_time, end_time, t_price, d_paid, s_paid, remaining, status, dp_time, settlement_time, id]);
+                client_name=$1, customer_type=$2, category=$3, client_email=$4, client_phone=$5, date=$6, start_time=$7, end_time=$8, 
+                total_price=$9, dp_paid=$10, settlement_paid=$11, remaining_payment=$12, status=$13,
+                dp_time = COALESCE(dp_time, $14),
+                settlement_time = COALESCE(settlement_time, $15)
+            WHERE id=$16`;
+            
+        await pool.query(updateQuery,[client_name, customer_type, category, client_email, client_phone, date, start_time, end_time, t_price, d_paid, s_paid, remaining, status, dp_time, settlement_time, id]);
         
         io.emit('bookings_changed');
         res.json({ message: "Booking updated" });

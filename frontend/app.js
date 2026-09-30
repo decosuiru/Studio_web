@@ -769,8 +769,12 @@ function openEditModal(b) {
     closeModalAnim('detail-modal');
     document.getElementById('booking_id').value = b.id;
     safeSetText('modal-title', "Edit Booking");
+    
     document.getElementById('customer_type').value = b.customer_type;
-    document.getElementById('booking_category').value = b.category || "Custom"; // [NEW] Set value
+    // Ini yang membuat dropdown terisi saat mode edit dibuka
+    const catSelect = document.getElementById('booking_category');
+    if (catSelect) catSelect.value = b.category || "Custom";
+    
     document.getElementById('client_name').value = b.client_name;
     document.getElementById('client_phone').value = b.client_phone;
     document.getElementById('client_email').value = b.client_email || "";
@@ -794,7 +798,7 @@ if(bookingForm) {
         e.preventDefault();
         const payload = {
             customer_type: document.getElementById('customer_type').value,
-            category: document.getElementById('booking_category').value, // [NEW] Ambil value category
+            category: document.getElementById('booking_category').value, // Harus dikirim!
             client_name: document.getElementById('client_name').value.trim(),
             client_phone: document.getElementById('client_phone').value.trim(),
             client_email: document.getElementById('client_email').value.trim(),
@@ -805,8 +809,8 @@ if(bookingForm) {
             dp_paid: parseFloat(document.getElementById('dp_paid').value) || 0,
             settlement_paid: parseFloat(document.getElementById('settlement_input').value) || 0
         };
-        // [UPDATED] Validasi
-        if(!payload.customer_type || !payload.category) return showAlert("Please select Customer Type & Category", true);
+        
+        if(!payload.customer_type || !payload.category) return showAlert("Please select Type & Category", true);
 
         const bookingId = document.getElementById('booking_id').value;
         try {
