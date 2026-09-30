@@ -558,6 +558,7 @@ function printInvoice() {
     document.getElementById('print_type').textContent = b.customer_type;
     document.getElementById('print_category').textContent = b.category || 'Custom'; // [NEW]
     document.getElementById('print_status').textContent = b.status;
+    document.getElementById('print_table_category').textContent = b.category || 'Custom Package';
     document.getElementById('print_date').textContent = formatDateID(b.date);
     document.getElementById('print_time').textContent = `${b.start_time.substring(0,5)} - ${b.end_time.substring(0,5)}`;
     document.getElementById('print_total').textContent = formatIDR(b.total_price);
