@@ -810,7 +810,7 @@ if(bookingForm) {
             settlement_paid: parseFloat(document.getElementById('settlement_input').value) || 0
         };
         
-        if(!payload.customer_type || !payload.category) return showAlert("Please select Type & Category", true);
+        if(!payload.customer_type || !payload.category) return showAlert("Please select Customer Type & Category", true);
 
         const bookingId = document.getElementById('booking_id').value;
         try {
