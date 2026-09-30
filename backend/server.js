@@ -31,23 +31,6 @@ io.on('connection', (socket) => {
 
 const SECRET_KEY = process.env.JWT_SECRET || 'fallback_secret';
 
-// --- AUTO MIGRATE DATABASE ---
-pool.connect()
-    .then(async (client) => {
-        console.log('✅ Connected to Supabase PostgreSQL');
-        try {
-            await client.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS customer_type VARCHAR(50) NOT NULL DEFAULT 'Regular';`);
-            await client.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS settlement_paid DECIMAL(15, 2) NOT NULL DEFAULT 0;`);
-            await client.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS dp_time TIMESTAMP;`);
-            await client.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS settlement_time TIMESTAMP;`);
-        } catch (e) {
-            console.log("Migration check complete.");
-        }
-        client.release();
-    })
-    .catch(err => console.error('❌ Database connection error:', err.stack));
-
-// --- MIDDLEWARE ---
 const authenticate = (req, res, next) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
@@ -136,7 +119,7 @@ app.put('/api/petty_cash/:id', authenticate, async (req, res) => {
 
 app.delete('/api/petty_cash/:id', authenticate, async (req, res) => {
     try {
-        await pool.query('DELETE FROM petty_cash WHERE id = $1',[req.params.id]);
+        await pool.query('DELETE FROM petty_cash WHERE id = $1', [req.params.id]);
         io.emit('finance_changed');
         res.json({ message: "Transaction deleted" });
     } catch (error) { res.status(500).json({ error: "Error deleting transaction." }); }
@@ -144,7 +127,7 @@ app.delete('/api/petty_cash/:id', authenticate, async (req, res) => {
 
 // --- BOOKINGS ---
 const calculateStatus = (price, received) => {
-    if (price === 0) return 'Paid'; 
+    if (price === 0) return 'Paid';
     if (received >= price) return 'Paid';
     if (received > 0) return 'Partial';
     return 'Unpaid';
@@ -159,9 +142,8 @@ app.get('/api/bookings', authenticate, async (req, res) => {
 
 app.post('/api/bookings', authenticate, async (req, res) => {
     try {
-        // [UPDATED] Tambahkan category
-        const { client_name, customer_type, category, client_email, client_phone, date, start_time, end_time, total_price, dp_paid, settlement_paid } = req.body;
-        if (!client_name || !client_phone || !customer_type || !category) return res.status(400).json({ error: "Name, Phone, Type, and Category required." });
+        const { client_name, customer_type, client_email, client_phone, date, start_time, end_time, total_price, dp_paid, settlement_paid } = req.body;
+        if (!client_name || !client_phone || !customer_type) return res.status(400).json({ error: "Name, Phone, and Customer Type required." });
 
         const t_price = parseFloat(total_price) || 0;
         const d_paid = parseFloat(dp_paid) || 0;
@@ -175,21 +157,22 @@ app.post('/api/bookings', authenticate, async (req, res) => {
         const overlap = await pool.query(`SELECT id FROM bookings WHERE date = $1 AND ($2 < end_time AND $3 > start_time)`,[date, start_time, end_time]);
         if (overlap.rows.length > 0) return res.status(400).json({ error: "Time slot is already booked." });
 
+        // [NEW] INVOICE NUMBER GENERATOR (JHS/DDMMYYNNN)
         const dateObj = new Date();
         const dd = String(dateObj.getDate()).padStart(2, '0');
         const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
         const yy = String(dateObj.getFullYear()).slice(-2);
-        const prefix = `JNS-INV/${dd}${mm}${yy}`;
+        const prefix = `JHS/${dd}${mm}${yy}`;
 
+        // Get count of bookings created today
         const countRes = await pool.query(`SELECT COUNT(*) FROM bookings WHERE invoice_no LIKE $1`, [`${prefix}%`]);
         const nextSeq = String(parseInt(countRes.rows[0].count) + 1).padStart(3, '0');
         const invoice_no = `${prefix}${nextSeq}`;
 
-        // [UPDATED] Tambahkan parameter ke query insert ($3 adalah category)
         const query = `
-            INSERT INTO bookings (client_name, customer_type, category, client_email, client_phone, date, start_time, end_time, total_price, dp_paid, settlement_paid, remaining_payment, status, dp_time, settlement_time, invoice_no) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`;
-        await pool.query(query,[client_name, customer_type, category, client_email, client_phone, date, start_time, end_time, t_price, d_paid, s_paid, remaining, status, dp_time, settlement_time, invoice_no]);
+            INSERT INTO bookings (client_name, customer_type, client_email, client_phone, date, start_time, end_time, total_price, dp_paid, settlement_paid, remaining_payment, status, dp_time, settlement_time, invoice_no) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`;
+        await pool.query(query,[client_name, customer_type, client_email, client_phone, date, start_time, end_time, t_price, d_paid, s_paid, remaining, status, dp_time, settlement_time, invoice_no]);
         
         io.emit('bookings_changed');
         res.json({ message: "Booking created" });
@@ -201,10 +184,9 @@ app.post('/api/bookings', authenticate, async (req, res) => {
 
 app.put('/api/bookings/:id', authenticate, async (req, res) => {
     try {
-        // [UPDATED] Tambahkan category
-        const { client_name, customer_type, category, client_email, client_phone, date, start_time, end_time, total_price, dp_paid, settlement_paid } = req.body;
+        const { client_name, customer_type, client_email, client_phone, date, start_time, end_time, total_price, dp_paid, settlement_paid } = req.body;
         const { id } = req.params;
-        if (!client_name || !client_phone || !customer_type || !category) return res.status(400).json({ error: "Required fields missing." });
+        if (!client_name || !client_phone || !customer_type) return res.status(400).json({ error: "Required fields missing." });
 
         const t_price = parseFloat(total_price) || 0;
         const d_paid = parseFloat(dp_paid) || 0;
@@ -218,15 +200,14 @@ app.put('/api/bookings/:id', authenticate, async (req, res) => {
         const overlap = await pool.query(`SELECT id FROM bookings WHERE date = $1 AND id != $2 AND ($3 < end_time AND $4 > start_time)`,[date, id, start_time, end_time]);
         if (overlap.rows.length > 0) return res.status(400).json({ error: "Time slot is already booked." });
 
-        // [UPDATED] Tambahkan update category ($3)
         const updateQuery = `
             UPDATE bookings SET 
-                client_name=$1, customer_type=$2, category=$3, client_email=$4, client_phone=$5, date=$6, start_time=$7, end_time=$8, 
-                total_price=$9, dp_paid=$10, settlement_paid=$11, remaining_payment=$12, status=$13,
-                dp_time = COALESCE(dp_time, $14),
-                settlement_time = COALESCE(settlement_time, $15)
-            WHERE id=$16`;
-        await pool.query(updateQuery,[client_name, customer_type, category, client_email, client_phone, date, start_time, end_time, t_price, d_paid, s_paid, remaining, status, dp_time, settlement_time, id]);
+                client_name=$1, customer_type=$2, client_email=$3, client_phone=$4, date=$5, start_time=$6, end_time=$7, 
+                total_price=$8, dp_paid=$9, settlement_paid=$10, remaining_payment=$11, status=$12,
+                dp_time = COALESCE(dp_time, $13),
+                settlement_time = COALESCE(settlement_time, $14)
+            WHERE id=$15`;
+        await pool.query(updateQuery,[client_name, customer_type, client_email, client_phone, date, start_time, end_time, t_price, d_paid, s_paid, remaining, status, dp_time, settlement_time, id]);
         
         io.emit('bookings_changed');
         res.json({ message: "Booking updated" });
