@@ -792,13 +792,14 @@ function openEditModal(b) {
 
 function closeBookingModal() { closeModalAnim('booking-modal'); }
 
+// --- API SUBMISSIONS ---
 const bookingForm = document.getElementById('booking-form');
 if(bookingForm) {
     bookingForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const payload = {
             customer_type: document.getElementById('customer_type').value,
-            category: document.getElementById('booking_category').value, // Harus dikirim!
+            category: document.getElementById('booking_category').value, // INI YANG SEBELUMNYA HILANG
             client_name: document.getElementById('client_name').value.trim(),
             client_phone: document.getElementById('client_phone').value.trim(),
             client_email: document.getElementById('client_email').value.trim(),
@@ -810,7 +811,9 @@ if(bookingForm) {
             settlement_paid: parseFloat(document.getElementById('settlement_input').value) || 0
         };
         
-        if(!payload.customer_type || !payload.category) return showAlert("Please select Customer Type & Category", true);
+        if(!payload.customer_type || !payload.category) {
+            return showAlert("Please select Customer Type and Package Category", true);
+        }
 
         const bookingId = document.getElementById('booking_id').value;
         try {
